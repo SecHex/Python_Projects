@@ -19,7 +19,7 @@ class GitHubUserSearch(QWidget):
         self.followers_label = QLabel('')
         self.following_label = QLabel('')
 
-        # arrange GUI elements in layout
+
         layout = QVBoxLayout()
         layout.addWidget(self.user_label)
         layout.addWidget(self.user_input)
@@ -32,15 +32,10 @@ class GitHubUserSearch(QWidget):
         self.setLayout(layout)
 
     def search_user(self):
-        # get username from input field
         username = self.user_input.text()
-
-        # make API request to get user information
         response = requests.get(f'https://api.github.com/users/{username}')
 
-        # check if API request was successful
         if response.status_code == 200:
-            # display user information in GUI
             user_data = response.json()
             self.name_label.setText(f"Name: {user_data['name']}")
             self.bio_label.setText(f"Bio: {user_data['bio']}")
@@ -48,7 +43,6 @@ class GitHubUserSearch(QWidget):
             self.followers_label.setText(f"Followers: {user_data['followers']}")
             self.following_label.setText(f"Following: {user_data['following']}")
         else:
-            # display error message in GUI
             QMessageBox.warning(self, 'Error', f"Could not fetch user information for {username}. "
                                                f"Error message: {response.json()['message']}")
 
